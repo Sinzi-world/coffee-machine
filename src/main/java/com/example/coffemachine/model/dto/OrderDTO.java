@@ -1,4 +1,4 @@
-package com.example.coffemachine.models.dto;
+package com.example.coffemachine.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
