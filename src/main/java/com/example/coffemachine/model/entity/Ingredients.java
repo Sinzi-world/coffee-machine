@@ -1,5 +1,6 @@
-package com.example.coffemachine.models.entity;
+package com.example.coffemachine.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +28,7 @@ public class Ingredients {
     private Integer quantity;
 
 
-    @ManyToMany(mappedBy = "ingredients")
+    @ManyToMany(mappedBy = "ingredients", fetch = FetchType.EAGER)
+    @JsonBackReference
     private Set<Drinks> drinks;
 }
