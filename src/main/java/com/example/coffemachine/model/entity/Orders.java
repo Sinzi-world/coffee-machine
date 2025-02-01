@@ -1,34 +1,32 @@
-package com.example.coffemachine.models.entity;
+package com.example.coffemachine.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "drink_ingredients")
-public class DrinkIngredients {
+@Table(name = "orders")
+public class Orders {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Связь с напитком
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+
     @ManyToOne
     @JoinColumn(name = "drink_id", referencedColumnName = "id", nullable = false)
     private Drinks drink;
 
-    // Связь с ингредиентом
-    @ManyToOne
-    @JoinColumn(name = "ingredient_id", referencedColumnName = "id", nullable = false)
-    private Ingredients ingredient;
 
-    @Column(name = "amount")
-    private Integer amount;
 }
 

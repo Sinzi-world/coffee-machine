@@ -1,4 +1,4 @@
-package com.example.coffemachine.models.entity;
+package com.example.coffemachine.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
