@@ -2,13 +2,13 @@ package com.example.coffemachine.controller;
 
 import com.example.coffemachine.mapper.DrinksMapper;
 import com.example.coffemachine.mapper.IngredientsMapper;
+import com.example.coffemachine.model.dto.CustomDrinkDTO;
 import com.example.coffemachine.model.dto.DrinkDTO;
 import com.example.coffemachine.model.dto.OrderDTO;
 import com.example.coffemachine.model.entity.Ingredients;
 import com.example.coffemachine.service.impl.CoffeeMachineServiceImpl;
 import lombok.Data;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,5 +57,10 @@ public class CoffeeMachineController {
     @PostMapping("/ingredients")
     public void addIngredient(@RequestParam String ingredientName, @RequestParam Integer quantity) {
         coffeeMachineService.addIngredient(ingredientName, quantity);
+    }
+
+    @PostMapping("/drinks")
+    public void addCustomDrink(@RequestBody CustomDrinkDTO customDrink) {
+        coffeeMachineService.addCustomDrink(customDrink);
     }
 }
