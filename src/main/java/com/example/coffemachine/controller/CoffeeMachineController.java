@@ -4,13 +4,12 @@ import com.example.coffemachine.mapper.DrinksMapper;
 import com.example.coffemachine.mapper.IngredientsMapper;
 import com.example.coffemachine.model.dto.CustomDrinkDTO;
 import com.example.coffemachine.model.dto.DrinkDTO;
+import com.example.coffemachine.model.dto.IngredientDTO;
 import com.example.coffemachine.model.dto.OrderDTO;
-import com.example.coffemachine.model.entity.Ingredients;
 import com.example.coffemachine.service.impl.CoffeeMachineServiceImpl;
 import lombok.Data;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @RestController
@@ -24,22 +23,16 @@ public class CoffeeMachineController {
 
     @GetMapping("/drinks")
     public List<DrinkDTO> getAllDrinks() {
-        return coffeeMachineService.getAllDrinks().stream()
-                .map(drinksMapper::toDto)
-                .collect(Collectors.toList());
+        return coffeeMachineService.getAllDrinks();
     }
 
     @GetMapping("/drinks/{id}")
     public DrinkDTO getDrinkById(@PathVariable Long id) {
-        return coffeeMachineService.getAllDrinks().stream()
-                .filter(drink -> drink.getId().equals(id))
-                .findFirst()
-                .map(drinksMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("Drink not found with id: " + id));
+        return coffeeMachineService.getDrinkById(id);
     }
 
     @GetMapping("/ingredients")
-    public List<Ingredients> getAllIngredients() {
+    public List<IngredientDTO> getAllIngredients() {
         return coffeeMachineService.getAllIngredients();
     }
 

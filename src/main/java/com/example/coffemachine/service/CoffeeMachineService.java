@@ -1,17 +1,19 @@
 package com.example.coffemachine.service;
 
 import com.example.coffemachine.model.dto.CustomDrinkDTO;
+import com.example.coffemachine.model.dto.DrinkDTO;
+import com.example.coffemachine.model.dto.IngredientDTO;
 import com.example.coffemachine.model.dto.OrderDTO;
-import com.example.coffemachine.model.entity.Ingredients;
-import com.example.coffemachine.model.entity.Drinks;
 import java.util.List;
 
 public interface CoffeeMachineService {
 
 
-    List<Drinks> getAllDrinks();
+    List<DrinkDTO> getAllDrinks();
 
-    List<Ingredients> getAllIngredients();
+    DrinkDTO getDrinkById(Long id);
+
+    List<IngredientDTO> getAllIngredients();
 
     Integer getIngredientQuantity(String ingredientName);
 
