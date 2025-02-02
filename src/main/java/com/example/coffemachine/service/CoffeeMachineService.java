@@ -1,5 +1,6 @@
 package com.example.coffemachine.service;
 
+import com.example.coffemachine.model.dto.CustomDrinkDTO;
 import com.example.coffemachine.model.dto.OrderDTO;
 import com.example.coffemachine.model.entity.Ingredients;
 import com.example.coffemachine.model.entity.Drinks;
@@ -17,6 +18,8 @@ public interface CoffeeMachineService {
     OrderDTO createOrder(String drinkName);
 
     void addIngredient(String ingredientName, Integer quantity);
+
+    void addCustomDrink(CustomDrinkDTO customDrinkDTO);
 
 }
 
