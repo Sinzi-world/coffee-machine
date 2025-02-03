@@ -1,18 +1,9 @@
 package com.example.coffemachine.service.impl;
 
 import com.example.coffemachine.mapper.DrinksMapper;
-import com.example.coffemachine.model.dto.CustomDrinkDTO;
-import com.example.coffemachine.model.dto.DrinkDTO;
-import com.example.coffemachine.model.dto.IngredientDTO;
-import com.example.coffemachine.model.dto.OrderDTO;
-import com.example.coffemachine.model.entity.DrinkIngredients;
-import com.example.coffemachine.model.entity.Ingredients;
-import com.example.coffemachine.model.entity.Drinks;
-import com.example.coffemachine.model.entity.Orders;
-import com.example.coffemachine.repository.DrinkIngredientsRepository;
-import com.example.coffemachine.repository.IngredientsRepository;
-import com.example.coffemachine.repository.DrinksRepository;
-import com.example.coffemachine.repository.OrderRepository;
+import com.example.coffemachine.model.dto.*;
+import com.example.coffemachine.model.entity.*;
+import com.example.coffemachine.repository.*;
 import com.example.coffemachine.service.CoffeeMachineService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +23,7 @@ public class CoffeeMachineServiceImpl implements CoffeeMachineService {
     private final OrderRepository orderRepository;
     private final DrinkIngredientsRepository drinkIngredientsRepository;
     private final DrinksMapper drinksMapper;
+    private final DrinkStatisticsRepository drinkStatisticsRepository;
 
     @Override
     public List<DrinkDTO> getAllDrinks() {
@@ -74,6 +66,21 @@ public class CoffeeMachineServiceImpl implements CoffeeMachineService {
     }
 
     @Override
+    public DrinkStatisticsDTO getDrinkStatistics(String drinkName) {
+        DrinkStatistics stats = drinkStatisticsRepository.findByDrinkName(drinkName)
+                .orElseThrow(() -> new RuntimeException("Statistics not found for drink: " + drinkName));
+        return new DrinkStatisticsDTO(stats.getDrinkName(), stats.getOrderCount());
+    }
+
+    @Override
+    public DrinkStatisticsDTO getMostPopularDrink() {
+        DrinkStatistics stats = drinkStatisticsRepository.findTopByOrderByOrderCountDesc()
+                .orElseThrow(() -> new RuntimeException("No statistics available"));
+
+        return new DrinkStatisticsDTO(stats.getDrinkName(), stats.getOrderCount());
+    }
+
+    @Override
     public OrderDTO createOrder(String drinkName) {
         log.info("Creating order for drink: {}", drinkName);
 
@@ -112,16 +119,28 @@ public class CoffeeMachineServiceImpl implements CoffeeMachineService {
         Orders order = new Orders();
         order.setDrink(drink);
         order.setCreatedAt(LocalDateTime.now());
-        orderRepository.save(order);
+        Orders savedOrder = orderRepository.save(order);
 
         DrinkDTO drinkDTO = drinksMapper.toDto(drink);
 
-        log.info("Order created successfully with ID: {}", order.getId());
+        log.info("Order created successfully with ID: {}", savedOrder.getId());
+
+        DrinkStatistics drinkStatistics = drinkStatisticsRepository.findByDrinkName(drinkName)
+                .orElseGet(() -> {
+                    DrinkStatistics newStats = new DrinkStatistics();
+                    newStats.setDrink(drink);
+                    newStats.setDrinkName(drink.getName());
+                    newStats.setOrderCount(0);
+                    return newStats;
+                });
+
+        drinkStatistics.setOrderCount(drinkStatistics.getOrderCount() + 1);
+        drinkStatisticsRepository.save(drinkStatistics);
 
         return OrderDTO.builder()
-                .id(order.getId())
+                .id(savedOrder.getId())
                 .drink(drinkDTO)
-                .createdAt(order.getCreatedAt())
+                .createdAt(savedOrder.getCreatedAt())
                 .build();
     }
 

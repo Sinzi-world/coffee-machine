@@ -1,9 +1,7 @@
 package com.example.coffemachine.service;
 
-import com.example.coffemachine.model.dto.CustomDrinkDTO;
-import com.example.coffemachine.model.dto.DrinkDTO;
-import com.example.coffemachine.model.dto.IngredientDTO;
-import com.example.coffemachine.model.dto.OrderDTO;
+import com.example.coffemachine.model.dto.*;
+
 import java.util.List;
 
 public interface CoffeeMachineService {
@@ -18,6 +16,10 @@ public interface CoffeeMachineService {
     Integer getIngredientQuantity(String ingredientName);
 
     OrderDTO createOrder(String drinkName);
+
+    DrinkStatisticsDTO getDrinkStatistics(String drinkName);
+
+    DrinkStatisticsDTO getMostPopularDrink();
 
     void addIngredient(String ingredientName, Integer quantity);
 
