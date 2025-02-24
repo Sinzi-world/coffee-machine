@@ -16,4 +16,5 @@ public class OrderDTO {
     private Long id;
     private DrinkDTO drink;
     private LocalDateTime createdAt;
+    private String message;
 }

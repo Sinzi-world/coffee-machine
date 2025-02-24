@@ -36,10 +36,27 @@ public class CoffeeMachineController {
         return coffeeMachineService.getAllIngredients();
     }
 
-
     @GetMapping("/ingredients/{name}")
     public Integer getIngredientQuantity(@PathVariable String name) {
         return coffeeMachineService.getIngredientQuantity(name);
+    }
+
+    @GetMapping("/history")
+    public List<OrderDTO> getOrders(
+            @RequestParam int offset,
+            @RequestParam int limit) {
+        System.out.println("Offset: " + offset + ", Limit: " + limit);
+        return coffeeMachineService.getOrders(offset, limit);
+    }
+
+    @GetMapping("/history/count")
+    public Integer getHistoryCount() {
+        return coffeeMachineService.getTotalOrdersCount();
+    }
+
+    @GetMapping("/drinks/{id}/ingredients")
+    public List<IngredientDTO> getDrinkIngredientsById(@PathVariable Long id) {
+        return coffeeMachineService.getDrinkIngredientsById(id);
     }
 
     @PostMapping("/orders")

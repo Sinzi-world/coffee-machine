@@ -76,41 +76,83 @@ public class CoffeeMachineServiceImpl implements CoffeeMachineService {
     public DrinkStatisticsDTO getMostPopularDrink() {
         DrinkStatistics stats = drinkStatisticsRepository.findTopByOrderByOrderCountDesc()
                 .orElseThrow(() -> new RuntimeException("No statistics available"));
-
         return new DrinkStatisticsDTO(stats.getDrinkName(), stats.getOrderCount());
     }
 
     @Override
+    public List<OrderDTO> getOrders(int offset, int limit) {
+        return orderRepository.findOrdersWithPagination(offset, limit)
+                .stream()
+                .map(order -> OrderDTO.builder()
+                        .id(order.getId())
+                        .drink(DrinkDTO.builder()
+                                .id(order.getDrink().getId())
+                                .name(order.getDrink().getName())
+                                .build())
+                        .createdAt(order.getCreatedAt())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public Integer getTotalOrdersCount() {
+        return Math.toIntExact(orderRepository.count());
+    }
+
+
+    @Override
+    public List<IngredientDTO> getDrinkIngredientsById(Long id) {
+        log.info("Fetching ingredients for drink with id: {}", id);
+        List<Ingredients> ingredients = ingredientsRepository.findIngredientsByDrinkId(id);
+        if (ingredients.isEmpty()) {
+            log.error("No ingredients found for drink with id: {}", id);
+            throw new RuntimeException("No ingredients found for drink with id: " + id);
+        }
+
+        return ingredients.stream()
+                .map(ingredient -> new IngredientDTO(ingredient.getId(), ingredient.getName()))
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
     public OrderDTO createOrder(String drinkName) {
         log.info("Creating order for drink: {}", drinkName);
-
         Drinks drink = drinksRepository.findByName(drinkName);
         if (drink == null) {
             log.error("Drink not found: {}", drinkName);
-            throw new RuntimeException("Drink not found: " + drinkName);
+            return OrderDTO.builder()
+                    .message("Drink not found: " + drinkName)
+                    .build();
         }
-
         List<DrinkIngredients> drinkIngredients = drinkIngredientsRepository.findByDrinkId(drink.getId());
         if (drinkIngredients.isEmpty()) {
             log.error("No ingredient composition found for: {}", drinkName);
-            throw new RuntimeException("No ingredient composition found for: " + drinkName);
+            return OrderDTO.builder()
+                    .message("No ingredient composition found for: " + drinkName)
+                    .build();
         }
 
-        for (DrinkIngredients drinkIngredients1 : drinkIngredients) {
+        for (DrinkIngredients drinkIngredient : drinkIngredients) {
             Ingredients storedIngredient = ingredientsRepository
-                    .findById(drinkIngredients1.getIngredient().getId())
-                    .orElseThrow(() -> new RuntimeException("Ingredient not found: "
-                            + drinkIngredients1.getIngredient().getName()));
-
-            if (storedIngredient.getQuantity() < drinkIngredients1.getAmount()) {
+                    .findById(drinkIngredient.getIngredient().getId())
+                    .orElse(null);
+            if (storedIngredient == null) {
+                return OrderDTO.builder()
+                        .message("Ingredient not found: " + drinkIngredient.getIngredient().getName())
+                        .build();
+            }
+            if (storedIngredient.getQuantity() < drinkIngredient.getAmount()) {
                 log.error("Not enough ingredient: {} (Available: {}, Required: {})",
                         storedIngredient.getName(), storedIngredient.getQuantity(),
-                        drinkIngredients1.getAmount());
-
-                throw new RuntimeException("Not enough ingredient: " + storedIngredient.getName());
+                        drinkIngredient.getAmount());
+                return OrderDTO.builder()
+                        .message("Недостаточно " + storedIngredient.getName() +
+                                " (Есть: " + storedIngredient.getQuantity() +
+                                ", необходимо: " + drinkIngredient.getAmount() + ")")
+                        .build();
             }
-
-            storedIngredient.setQuantity(storedIngredient.getQuantity() - drinkIngredients1.getAmount());
+            storedIngredient.setQuantity(storedIngredient.getQuantity() - drinkIngredient.getAmount());
             ingredientsRepository.save(storedIngredient);
             log.info("Updated ingredient quantity for {}: {}",
                     storedIngredient.getName(), storedIngredient.getQuantity());
@@ -120,11 +162,6 @@ public class CoffeeMachineServiceImpl implements CoffeeMachineService {
         order.setDrink(drink);
         order.setCreatedAt(LocalDateTime.now());
         Orders savedOrder = orderRepository.save(order);
-
-        DrinkDTO drinkDTO = drinksMapper.toDto(drink);
-
-        log.info("Order created successfully with ID: {}", savedOrder.getId());
-
         DrinkStatistics drinkStatistics = drinkStatisticsRepository.findByDrinkName(drinkName)
                 .orElseGet(() -> {
                     DrinkStatistics newStats = new DrinkStatistics();
@@ -136,18 +173,20 @@ public class CoffeeMachineServiceImpl implements CoffeeMachineService {
 
         drinkStatistics.setOrderCount(drinkStatistics.getOrderCount() + 1);
         drinkStatisticsRepository.save(drinkStatistics);
+        DrinkDTO drinkDTO = drinksMapper.toDto(drink);
+        log.info("Напиток: {} готовится!" , savedOrder.getDrink().getName());
 
         return OrderDTO.builder()
                 .id(savedOrder.getId())
                 .drink(drinkDTO)
                 .createdAt(savedOrder.getCreatedAt())
+                .message("Напиток " + savedOrder.getDrink().getName() + " готовится!")
                 .build();
     }
 
     @Override
     public void addIngredient(String ingredientName, Integer quantity) {
         log.info("Adding {} of ingredient: {}", quantity, ingredientName);
-
         Ingredients ingredient = ingredientsRepository.findByName(ingredientName);
         if (ingredient == null) {
             log.error("Ingredient not found: {}", ingredientName);
@@ -161,7 +200,6 @@ public class CoffeeMachineServiceImpl implements CoffeeMachineService {
     @Override
     public void addCustomDrink(CustomDrinkDTO customDrinkDTO) {
         log.info("Adding custom drink: {}", customDrinkDTO.getDrinkName());
-
         Drinks drink = new Drinks();
         drink.setName(customDrinkDTO.getDrinkName());
         drinksRepository.save(drink);
@@ -172,7 +210,6 @@ public class CoffeeMachineServiceImpl implements CoffeeMachineService {
                 log.error("Ingredient not found: {}", entry.getKey());
                 throw new RuntimeException("Ingredient not found: " + entry.getKey());
             }
-
             DrinkIngredients drinkIngredients = new DrinkIngredients();
             drinkIngredients.setDrink(drink);
             drinkIngredients.setIngredient(ingredient);
@@ -180,7 +217,6 @@ public class CoffeeMachineServiceImpl implements CoffeeMachineService {
             drinkIngredientsRepository.save(drinkIngredients);
             log.info("Added ingredient: {} with amount: {}", entry.getKey(), entry.getValue());
         }
-
         log.info("Custom drink {} added successfully", customDrinkDTO.getDrinkName());
     }
 }
