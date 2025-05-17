@@ -15,3 +15,7 @@ spring:
 
 schedule:
   signature-check: "0 0 0 * * ?"
+
+digital-signature:
+  private-key: classpath:keys/private_key.pem
+  public-key: classpath:keys/public_key.pem
