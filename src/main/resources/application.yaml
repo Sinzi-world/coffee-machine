@@ -12,3 +12,6 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+
+schedule:
+  signature-check: "0 0 0 * * ?"
